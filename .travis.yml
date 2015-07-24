@@ -20,11 +20,11 @@ before_install:
   - date -u
   - uname -a
   - lsb_release -a
-    #  - if [ $PYVER == "2.4" ]; then sudo apt-get remove python; done
-  - if [ $PYVER == "2.4" ]; then sudo add-apt-repository -y ppa:fkrull/deadsnakes && sudo apt-get update -qq; done
+    #  - if [ $PYVER == "2.4" ]; then sudo apt-get remove python; fi
+  - if [ $PYVER == "2.4" ]; then sudo add-apt-repository -y ppa:fkrull/deadsnakes && sudo apt-get update -qq; fi
 
 install:
-  - if [ $PYVER == "2.4" ]; then sudo apt-get install python2.4 -y --force-yes > /dev/null; done
+  - if [ $PYVER == "2.4" ]; then sudo apt-get install python2.4 -y --force-yes > /dev/null; fi
   - python --version
 
 script:
