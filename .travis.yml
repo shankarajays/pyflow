@@ -2,15 +2,11 @@ language: python
 
 sudo: required
 
-env:
-  - PYVER=
-
 matrix:
   include:
       #- python: "2.5"
       #- python: "2.7"
     # hack to run custom 2.4 install from deadsnakes:
-    - python: "2.7"
     - python: "2.7"
       env: PYVER="2.4"
 
@@ -21,12 +17,12 @@ before_install:
   - date -u
   - uname -a
   - lsb_release -a
-    #  - if [ $PYVER == "2.4" ]; then sudo apt-get remove python; fi
-  - if [ $PYVER == "2.4" ]; then sudo add-apt-repository -y ppa:fkrull/deadsnakes && sudo apt-get update -qq; fi
+    #  - if [ "$PYVER" == "2.4" ]; then sudo apt-get remove python; fi
+  - if [ "$PYVER" == "2.4" ]; then sudo add-apt-repository -y ppa:fkrull/deadsnakes && sudo apt-get update -qq; fi
 
 install:
-  - if [ $PYVER == "2.4" ]; then sudo apt-get install python2.4 -y --force-yes && python2.4 --version; fi
-  - python --version
+  - if [ "$PYVER" == "2.4" ]; then sudo apt-get install python2.4 -y && python2.4 -V; fi
+  - python -V
 
 script:
   - cd scratch/test && bash ./test_release_tarball.bash -nosge 
