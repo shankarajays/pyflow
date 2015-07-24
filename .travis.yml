@@ -22,7 +22,7 @@ before_install:
 
 install:
   - if [ "$PYVER" == "2.4" ]; then sudo apt-get install python2.4 -y && python2.4 -V; fi
-  - if [ "$PYVER" == "2.4" ]; then alias python=python2.4; fi
+  - alias python=python2.4
   - python -V
 
 script:
