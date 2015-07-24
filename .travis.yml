@@ -23,6 +23,9 @@ before_install:
 install:
   - if [ "$PYVER" == "2.4" ]; then sudo apt-get install python2.4 -y && python2.4 -V; fi
   - alias python=python2.4
+  - which python2.4
+  - dirname $(which python2.4)
+  - export PATH="$(dirname $(which python2.4)):$PATH"
   - python -V
 
 script:
