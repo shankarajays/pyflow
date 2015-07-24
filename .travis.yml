@@ -28,6 +28,7 @@ install:
     # - dirname $(which python2.4)
     # - export PATH="$(dirname $(which python2.4)):$PATH"
   - ls -l /usr/bin/py*
+  - export PATH=/usr/bin:$PATH
   - which -a python
   - python -V
 
