@@ -59,37 +59,15 @@ moduleDir = os.path.abspath(os.path.dirname(__file__))
 # minimum python version
 #
 pyver = sys.version_info
-if pyver[0] != 2 or (pyver[0] == 2 and pyver[1] < 4) :
-    raise Exception("pyflow module has only been tested for python versions [2.4,3.0)")
-
-# problem python versions:
-#
-# Internal interpreter deadlock issue in python 2.7.2:
-# http://bugs.python.org/issue13817
-# ..is so bad that pyflow can partially, but not completely, work around it -- so issue a warning for this case.
-if pyver[0] == 2 and pyver[1] == 7 and pyver[2] == 2 :
-    raise Exception("Python interpreter errors in python 2.7.2 may cause a pyflow workflow hang or crash. Please use a different python version.")
-
-
-# The line below is a workaround for a python 2.4/2.5 bug in
-# the subprocess module.
-#
-# Bug is described here: http://bugs.python.org/issue1731717
-# Workaround is described here: http://bugs.python.org/issue1236
-#
-subprocess._cleanup = lambda: None
-
+if pyver[0] != 3 or (pyver[0] == 3 and pyver[1] < 7) :
+    raise Exception("pyflow module has only been tested for python versions [3.7]")
 
 # In python 2.5 or greater, we can lower the per-thread stack size to
 # improve memory consumption when a very large number of jobs are
 # run. Below it is lowered to 256Kb (compare to linux default of
 # 8Mb).
 #
-try:
-    threading.stack_size(min(256 * 1024, threading.stack_size))
-except AttributeError:
-    # Assuming this means python version < 2.5
-    pass
+threading.stack_size(min(256 * 1024, threading.stack_size()))
 
 
 class GlobalSync :
@@ -126,6 +104,7 @@ def getPyflowVersion() :
     try :
         proc = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE, stderr=open(os.devnull, "w"), cwd=moduleDir, shell=False)
         (stdout, _stderr) = proc.communicate()
+        stdout = stdout.decode('utf-8')
         retval = proc.wait()
         stdoutList = stdout.split("\n")[:-1]
         if (retval == 0) and (len(stdoutList) == 1) : return stdoutList[0]
@@ -184,7 +163,7 @@ def cleanEnv() :
     fail with the behavior of current (201512) versions of SGE qsub
     """
 
-    ekeys = os.environ.keys()
+    ekeys = list(os.environ.keys())
     for key in ekeys :
         if key.endswith("()") :
             del os.environ[key]
@@ -221,16 +200,16 @@ def timeStrNow():
 
 def timeStrToTimeStamp(ts):
     import calendar
-    d = datetime.datetime(*map(int, re.split(r'[^\d]', ts)[:-1]))
+    d = datetime.datetime(*list(map(int, re.split(r'[^\d]', ts)[:-1])))
     return calendar.timegm(d.timetuple())
 
 
 
 def isInt(x) :
-    return isinstance(x, (int, long))
+    return isinstance(x, int)
 
 def isString(x):
-    return isinstance(x, basestring)
+    return isinstance(x, str)
 
 
 def isIterable(x):
@@ -412,7 +391,7 @@ def isLocalSmtp() :
 def sendEmail(mailTo, mailFrom, subject, msgList) :
     import smtplib
     # this is the way to import MIMEText in py 2.4:
-    from email.MIMEText import MIMEText
+    from email.mime.text import MIMEText
 
     # format message list into a single string:
     msg = msgListToMsg(msgList)
@@ -440,7 +419,7 @@ def argToBool(x) :
     class FalseStrings :
         val = ("", "0", "false", "f", "no", "n", "off")
 
-    if isinstance(x, basestring) :
+    if isinstance(x, str) :
         return (x.lower() not in FalseStrings.val)
     return bool(x)
 
@@ -584,7 +563,7 @@ def stackDump(dumpfp):
     for name in tnames : dumpfp.write("  %s\n" % (name))
     dumpfp.write("\n")
 
-    for tid, stack in frames.items():
+    for tid, stack in list(frames.items()):
         dumpfp.write("Thread: %d %s\n" % (tid, id2name.get(tid, "NAME_UNKNOWN")))
         for filename, lineno, name, line in traceback.extract_stack(stack):
             dumpfp.write('File: "%s", line %d, in %s\n' % (filename, lineno, name))
@@ -788,7 +767,7 @@ def writeDotScript(taskDotScriptFile,
     """
     import inspect
 
-    dsfp = os.fdopen(os.open(taskDotScriptFile, os.O_WRONLY | os.O_CREAT, 0755), 'w')
+    dsfp = os.fdopen(os.open(taskDotScriptFile, os.O_WRONLY | os.O_CREAT, 0o755), 'w')
 
     dsfp.write("""#!/usr/bin/env python
 #
@@ -889,11 +868,11 @@ class StoppableThread(threading.Thread):
 
     def __init__(self, *args, **kw):
         threading.Thread.__init__(self, *args, **kw)
-        self._stop = threading.Event()
+        self._stopper = threading.Event()
 
     def stop(self):
         "thread specific stop method, may be overridden to add async thread-specific kill behavior"
-        self._stop.set()
+        self._stopper.set()
 
     @staticmethod
     def stopAll():
@@ -901,7 +880,7 @@ class StoppableThread(threading.Thread):
         StoppableThread._stopAll.set()
 
     def stopped(self):
-        return (StoppableThread._stopAll.isSet() or self._stop.isSet())
+        return (StoppableThread._stopAll.isSet() or self._stopper.isSet())
 
 
 
@@ -1173,7 +1152,7 @@ class CommandTaskRunner(BaseTaskRunner) :
                      'cmd' : self.cmd.cmd, 'isShellCmd' : (self.cmd.type == "str") }
 
         argFile = os.path.join(self.tmpDir, "taskWrapperParameters.pickle")
-        pickle.dump(taskInfo, open(argFile, "w"))
+        pickle.dump(taskInfo, open(argFile, 'wb'))
 
         self.wrapperCmd = [self.taskWrapper, self.runid, self.taskStr, argFile]
 
@@ -1486,7 +1465,7 @@ class SGETaskRunner(CommandTaskRunner) :
         if len(results.outList) != 1 :
             isQsubError = True
         else :
-            w = results.outList[0].split()
+            w = results.outList[0].decode('utf-8').split()
             if (len(w) > 3) and (w[0] == "Your") and (w[1] == "job") :
                 self.setNewJobId(int(w[2]))
             else :
@@ -1499,7 +1478,7 @@ class SGETaskRunner(CommandTaskRunner) :
 
         if isQsubError or (self.jobId is None):
             retInfo.taskExitMsg = ["Unexpected qsub output. Logging %i line(s) of qsub output below:" % (len(results.outList)) ]
-            retInfo.taskExitMsg.extend([ "[qsub-out] " + line for line in results.outList ])
+            retInfo.taskExitMsg.extend([ "[qsub-out] " + line.decode('utf-8') for line in results.outList ])
             return retInfo
 
         if results.retval != 0 :
@@ -1542,8 +1521,8 @@ class SGETaskRunner(CommandTaskRunner) :
             isQstatError = False
             if results.retval != 0:
                 if ((len(results.outList) == 2) and
-                     (results.outList[0].strip() == "Following jobs do not exist:") and
-                     (int(results.outList[1]) == self.jobId)) :
+                     (results.outList[0].decode('utf-8').strip() == "Following jobs do not exist:") and
+                     (int(results.outList[1].decode('utf-8')) == self.jobId)) :
                     break
                 else :
                     isQstatError = True
@@ -1558,7 +1537,7 @@ class SGETaskRunner(CommandTaskRunner) :
                 else :
                     retInfo.taskExitMsg = ["Unexpected qstat output or task has entered sge error state. Sge job_number: %i" % (self.jobId)]
                     retInfo.taskExitMsg.extend(["Logging %i line(s) of qstat output below:" % (len(results.outList)) ])
-                    retInfo.taskExitMsg.extend([ "[qstat-out] " + line for line in results.outList ])
+                    retInfo.taskExitMsg.extend([ "[qstat-out] " + line.decode('utf-8') for line in results.outList ])
                     # self._killJob() # leave the job there so the user can better diagnose whetever unexpected pattern has occurred
                 return retInfo
 
@@ -1903,7 +1882,7 @@ class TaskManager(StoppableThread) :
         Node status accordingly:
         """
         notrunning = set()
-        for task in self.runningTasks.keys() :
+        for task in list(self.runningTasks.keys()) :
             if self.stopped() : break
             trun = self.runningTasks[task]
             if not task.runStatus.isComplete.isSet() :
@@ -1980,13 +1959,13 @@ class TaskManager(StoppableThread) :
     @lockMethod
     def stop(self) :
         StoppableThread.stop(self)
-        for trun in self.runningTasks.values() :
+        for trun in list(self.runningTasks.values()) :
             trun.stop()
 
 
     @lockMethod
     def _areTasksDead(self) :
-        for trun in self.runningTasks.values() :
+        for trun in list(self.runningTasks.values()) :
             if trun.isAlive(): return False
         return True
 
@@ -2380,7 +2359,7 @@ class TaskDAG(object) :
     @lockMethod
     def isRunComplete(self) :
         "returns true if run is complete and error free"
-        for node in self.labelMap.values():
+        for node in list(self.labelMap.values()):
             if node.isIgnoreThis : continue
             if not node.isComplete() :
                 return False
@@ -2906,9 +2885,9 @@ class WorkflowRunnerThreadSharedData(object) :
                 raise Exception("Invalid run mode memMb argument: %s. Value must be 'unlimited' or an integer no less than 1" % (param.memMb))
 
         # verify/normalize input settings:
-        if param.mode not in RunMode.data.keys() :
+        if param.mode not in list(RunMode.data.keys()) :
             raise Exception("Invalid mode argument '%s'. Accepted modes are {%s}." \
-                            % (param.mode, ",".join(RunMode.data.keys())))
+                            % (param.mode, ",".join(list(RunMode.data.keys()))))
 
         if param.mode == "sge" :
             # TODO not-portable to windows (but is this a moot point -- all of sge mode is non-portable, no?):
@@ -3461,7 +3440,7 @@ class WorkflowRunner(object) :
             except KeyboardInterrupt:
                 msg = "Keyboard Interrupt, shutting down running tasks..."
                 self._killWorkflow(msg)
-            except DataDirException, e:
+            except DataDirException as e:
                 # Special exception for when pyflow directory can't be initialized.
                 # A killWorkflow is not needed for this case, because no workflow
                 # could be started.
@@ -4147,7 +4126,7 @@ class WorkflowRunner(object) :
     @staticmethod
     def _checkTaskLabel(label) :
         # sanity check label:
-        if not isinstance(label, basestring) :
+        if not isinstance(label, str) :
             raise Exception ("Task label is not a string")
         if label == "" :
             raise Exception ("Task label is empty")

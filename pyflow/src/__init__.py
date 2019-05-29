@@ -30,4 +30,4 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 #
-from pyflow import *
+from .pyflow import *

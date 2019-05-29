@@ -142,8 +142,13 @@ class StringBling(object) :
         """
         log a possibly multi-line message with decoration:
         """
+        try:
+            msg = msg.decode('utf-8')
+        except AttributeError:
+            pass
         prefix = "[%s] [%s] [%s] [%s] " % (timeStrNow(), self.hostname, self.runid, taskStr)
         if msg[-1] == "\n" : msg = msg[:-1]
+        
         for line in msg.split("\n") :
             ofp.write(writeFilter(prefix + line + "\n"))
         hardFlush(ofp)
@@ -175,10 +180,10 @@ class StringBling(object) :
 def getParams(paramsFile) :
     import pickle
 
-    paramhash = pickle.load(open(paramsFile))
+    paramhash = pickle.load(open(paramsFile, 'rb'))
     class Params : pass
     params = Params()
-    for (k, v) in paramhash.items() : setattr(params, k, v)
+    for (k, v) in list(paramhash.items()) : setattr(params, k, v)
     return params
 
 
