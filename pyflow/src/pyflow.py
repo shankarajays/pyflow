@@ -50,7 +50,7 @@ import threading
 import time
 import traceback
 
-from pyflowConfig import siteConfig
+from pyflow.pyflowConfig import siteConfig
 
 
 moduleDir = os.path.abspath(os.path.dirname(__file__))
