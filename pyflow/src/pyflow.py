@@ -59,8 +59,8 @@ moduleDir = os.path.abspath(os.path.dirname(__file__))
 # minimum python version
 #
 pyver = sys.version_info
-if pyver[0] != 3 or (pyver[0] == 3 and pyver[1] < 7) :
-    raise Exception("pyflow module has only been tested for python versions [3.7]")
+if pyver[0] != 3 or (pyver[0] == 3 and pyver[1] < 6) :
+    raise Exception("pyflow module has only been tested for python versions [3.7, 3.6]")
 
 # In python 2.5 or greater, we can lower the per-thread stack size to
 # improve memory consumption when a very large number of jobs are
@@ -3130,6 +3130,7 @@ The associated pyflow job details are as follows:
         #
 
         if self.param is None : return
+        if self.param.mailTo is None: return
         if len(self.param.mailTo) == 0 : return
 
         if not isLocalSmtp() :
