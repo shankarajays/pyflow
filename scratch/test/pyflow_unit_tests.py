@@ -304,7 +304,7 @@ class TestWorkflowRunner(unittest.TestCase) :
         r1=runner()
         r1.start()
         r1.join(30)
-        self.assertTrue(not r1.isAlive())
+        self.assertTrue(not r1.is_alive())
 
     def test_startFromTasks(self) :
         """

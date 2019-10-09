@@ -41,7 +41,7 @@ def main() :
 
     if True :
         # process-out to run the unit tests for now -- TODO: can we just import this instead?
-        utCmd=[sys.executable,"-E",utScriptPath,"-v"]
+        utCmd=[sys.executable,"-m", "pytest",utScriptPath]
         proc = subprocess.Popen(utCmd)
         proc.wait()
         if proc.returncode != 0 :

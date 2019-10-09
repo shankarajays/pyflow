@@ -50,8 +50,7 @@ class SubWorkflow(WorkflowRunner) :
 class TestWorkflow(WorkflowRunner) :
 
     def workflow(self) :
-
-	job=sleepjob+" 1"
+        job=sleepjob+" 1"
 
         self.addTask("easy_task1",yelljob+" 1")
         waitTask=self.addTask("easy_task3",runjob+" 10",nCores=2,memMb=1024,isForceLocal=True)
