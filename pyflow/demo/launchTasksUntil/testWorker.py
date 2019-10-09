@@ -41,7 +41,7 @@ specified in arg1.
 import sys
 
 if len(sys.argv) != 2 :
-    print "usage: $0 outputFile"
+    print("usage: $0 outputFile")
     sys.exit(2)
 
 outputFile=sys.argv[1]
@@ -53,7 +53,7 @@ time.sleep(sleepTime)
 
 reportVal=randint(1,20)
 
-ofp=open(outputFile,"wb")
+ofp=open(outputFile,"w", newline='\n')
 ofp.write("%i\n" % (reportVal))
 ofp.close()
 

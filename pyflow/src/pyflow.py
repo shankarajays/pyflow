@@ -1439,7 +1439,7 @@ class SGETaskRunner(CommandTaskRunner) :
                 qcall = QCaller(cmd,self.infoLog)
                 qcall.start()
                 qcall.join(maxQcallWait)
-                if not qcall.isAlive() : break
+                if not qcall.is_alive() : break
                 self.infoLog("Trial %i of sge command has timed out. Killing process for cmd '%s'" % ((i + 1), cmd))
                 qcall.killProc()
                 self.infoLog("Finished attempting to kill sge command")
@@ -1886,7 +1886,7 @@ class TaskManager(StoppableThread) :
             if self.stopped() : break
             trun = self.runningTasks[task]
             if not task.runStatus.isComplete.isSet() :
-                if trun.isAlive() : continue
+                if trun.is_alive() : continue
                 # if not complete and thread is dead then we don't know what happened, very bad!:
                 task.errorstate = 1
                 task.errorMessage = "Thread: '%s', has stopped without a traceable cause" % (trun.getName())
@@ -1966,7 +1966,7 @@ class TaskManager(StoppableThread) :
     @lockMethod
     def _areTasksDead(self) :
         for trun in list(self.runningTasks.values()) :
-            if trun.isAlive(): return False
+            if trun.is_alive(): return False
         return True
 
 
@@ -4058,7 +4058,7 @@ class WorkflowRunner(object) :
 
         if len(labels) == 0 :
             if namespace == "" :
-                if self._tdag.isRunExhausted() or (not self._tman.isAlive()) :
+                if self._tdag.isRunExhausted() or (not self._tman.is_alive()) :
                     if not self._tdag.isRunComplete() :
                         status.retval = 1
                 else:
@@ -4139,7 +4139,7 @@ class WorkflowRunner(object) :
         # Start a new task manager if one isn't already running. If it is running
         # provide a hint that a new task has just been added to the workflow.
         #
-        if (self._tman is not None) and (self._tman.isAlive()) :
+        if (self._tman is not None) and (self._tman.is_alive()) :
             self._tdag.isFinishedEvent.set()
             return
         if not self._cdata().isTaskManagerException :
@@ -4174,13 +4174,13 @@ class WorkflowRunner(object) :
         # Try to shut down the task manager, all command-tasks,
         # and all sub-workflow tasks.
         #
-        if (self._tman is None) or (not self._tman.isAlive()) : return
+        if (self._tman is None) or (not self._tman.is_alive()) : return
         StoppableThread.stopAll()
         self._stopAllWorkflows()
         self._tman.stop()
         for _ in range(timeoutSec) :
             time.sleep(1)
-            if not self._tman.isAlive() :
+            if not self._tman.is_alive() :
                 self._infoLog("Task shutdown complete")
                 return
         self._infoLog("Task shutdown timed out")
@@ -4273,7 +4273,7 @@ class WorkflowRunner(object) :
             Return true so long as the primary workflow threads (TaskRunner and TaskManager)
             are still alive
             """
-            return trun.isAlive() or ((self._tman is not None) and self._tman.isAlive())
+            return trun.is_alive() or ((self._tman is not None) and self._tman.is_alive())
 
         while isWorkflowRunning() :
             ewaiter.wait()
@@ -4361,7 +4361,7 @@ class WorkflowRunner(object) :
         # taskError information in case this thread is ahead of the
         # task manager.
         if isForceTaskHarvest :
-            if (self._tman is not None) and (self._tman.isAlive()) :
+            if (self._tman is not None) and (self._tman.is_alive()) :
                 self._tman.harvestTasks()
 
         if not self._cdata().isTaskError() : return []
