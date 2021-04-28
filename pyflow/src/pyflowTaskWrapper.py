@@ -293,7 +293,8 @@ The parameter pickle file contains all of the task parameters required by the wr
         # turn off buffering so that stderr is updated correctly and its timestamps
         # are more accurate:
         # TODO: is there a way to do this for stderr only?
-        proc = subprocess.Popen(fullcmd, stdout=toutFp, stderr=subprocess.PIPE, shell=isShell, bufsize=1, cwd=params.cwd, env=params.env)
+        #proc = subprocess.Popen(fullcmd, stdout=toutFp, stderr=subprocess.PIPE, shell=isShell, bufsize=1, cwd=params.cwd, env=params.env)
+        proc = subprocess.Popen(fullcmd, stdout=toutFp, stderr=subprocess.PIPE, shell=isShell, cwd=params.cwd, env=params.env)
         bling.transfer(proc.stderr, terrFp, fifo.add)
         retval = proc.wait()
 
